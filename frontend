@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online Auction System</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            margin: 0;
+        }
+
+        header {
+            background: #172b4d;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 85%;
+            margin: 25px auto;
+        }
+
+        .form, .product {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 7px 0;
+        }
+
+        input {
+            width: 95%;
+        }
+
+        button {
+            background: #f28c28;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #d97706;
+        }
+
+        .product {
+            border-left: 5px solid #f28c28;
+        }
+
+        .bid {
+            width: 65%;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Online Auction System</h1>
+    <p>Buy and Sell Products Through Online Bidding</p>
+</header>
+
+<div class="container">
+
+    <div class="form">
+        <h2>Seller - Add Product</h2>
+
+        <input type="text" id="seller"
+        placeholder="Seller Name">
+
+        <input type="text" id="product"
+        placeholder="Product Name">
+
+        <input type="number" id="price"
+        placeholder="Starting Price">
+
+        <button onclick="addProduct()">
+            Add Product
+        </button>
+    </div>
+
+    <h2>Available Auction Products</h2>
+
+    <div id="products"></div>
+
+</div>
+
+<script>
+
+let auctions = JSON.parse(
+    localStorage.getItem("auctions")
+) || [];
+
+function saveData() {
+    localStorage.setItem(
+        "auctions",
+        JSON.stringify(auctions)
+    );
+}
+
+function addProduct() {
+
+    let seller = document.getElementById("seller").value;
+    let product = document.getElementById("product").value;
+    let price = Number(document.getElementById("price").value);
+
+    if (!seller || !product || price <= 0) {
+        alert("Enter valid product details!");
+        return;
+    }
+
+    auctions.push({
+        seller: seller,
+        product: product,
+        startingPrice: price,
+        highestBid: price,
+        bidder: "No bids yet"
+    });
+
+    saveData();
+    displayProducts();
+
+    document.getElementById("seller").value = "";
+    document.getElementById("product").value = "";
+    document.getElementById("price").value = "";
+}
+
+function placeBid(index) {
+
+    let bid = Number(
+        document.getElementById("bid" + index).value
+    );
+
+    if (bid <= auctions[index].highestBid) {
+        alert("Bid must be higher than current bid!");
+        return;
+    }
+
+    let bidder = prompt("Enter your name:");
+
+    if (!bidder || !bidder.trim()) {
+        alert("Enter a valid bidder name!");
+        return;
+    }
+
+    auctions[index].highestBid = bid;
+    auctions[index].bidder = bidder.trim();
+
+    saveData();
+    displayProducts();
+
+    alert("Bid placed successfully!");
+}
+
+function displayProducts() {
+
+    let output = document.getElementById("products");
+
+    output.innerHTML = "";
+
+    if (auctions.length === 0) {
+        output.innerHTML = "<p>No products available.</p>";
+        return;
+    }
+
+    auctions.forEach((item, index) => {
+
+        output.innerHTML += `
+            <div class="product">
+
+                <h3>${escapeHTML(item.product)}</h3>
+
+                <p>Seller:
+                ${escapeHTML(item.seller)}</p>
+
+                <p>Starting Price: ₹${item.startingPrice}</p>
+
+                <p>Highest Bid: ₹${item.highestBid}</p>
+
+                <p>Highest Bidder:
+                ${escapeHTML(item.bidder)}</p>
+
+                <input class="bid"
+                type="number"
+                id="bid${index}"
+                placeholder="Enter your bid">
+
+                <button onclick="placeBid(${index})">
+                    Place Bid
+                </button>
+
+            </div>
+        `;
+    });
+}
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+displayProducts();
+
+</script>
+
+</body>
+</html>
